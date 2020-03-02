@@ -20,19 +20,19 @@ class Flight:
         self.price = dict['price']
 
     def check_price(self, toDate, fromDate):
-        if self.type == 'enkele':
-            driver.get(self.URL1 + toDate + self.URL2)
+        try:
+            price = driver.find_element_by_css_selector('.gws-flights-results__cheapest-price').text
+            converted_price = int(price[2:])
+            if self.cheapest[0] <= converted_price:
+                return self.cheapest
+            else:
+                return [converted_price, [toDate, fromDate]]
+        except:
+            button = driver.find_element_by_xpath(
+                '//*[@id="flt-app"]/div[2]/main[4]/div[7]/div[2]/div/div[2]/fill-button')
+            button.click()
             sleep(0.5)
-        elif self.type == 'retour':
-            driver.get(self.URL1 + toDate + self.middleBit + fromDate + self.URL2)
-            sleep(0.5)
-        driver.implicitly_wait(10)
-        price = driver.find_element_by_css_selector('.gws-flights-results__cheapest-price').text
-        converted_price = int(price[2:])
-        if self.cheapest[0] <= converted_price:
-            return self.cheapest
-        else:
-            return [converted_price, [toDate, fromDate]]
+            self.check_price(toDate, fromDate)
 
     def send_mail(self):
         server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -58,16 +58,20 @@ class Flight:
         server.quit()
 
     def scrape(self):
+        driver.implicitly_wait(15)
         if self.type == 'enkele':
             for toDate in self.toDates:
+                driver.get(self.URL1 + toDate + self.URL2)
+                sleep(0.5)
                 self.cheapest = self.check_price(toDate, None)
         elif self.type == 'retour':
             for toDate in self.toDates:
                 for fromDate in self.fromDates:
+                    driver.get(self.URL1 + toDate + self.middleBit + fromDate + self.URL2)
+                    sleep(0.5)
                     self.cheapest = self.check_price(toDate, fromDate)
         if self.cheapest[0] < self.price:
             self.send_mail()
         print(self.to, self.cheapest)
-
 
 driver.quit()
