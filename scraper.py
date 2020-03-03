@@ -32,7 +32,7 @@ class Flight:
                 '//*[@id="flt-app"]/div[2]/main[4]/div[7]/div[2]/div/div[2]/fill-button')
             button.click()
             sleep(0.5)
-            self.check_price(toDate, fromDate)
+            return self.check_price(toDate, fromDate)
 
     def send_mail(self):
         server = smtplib.SMTP('smtp.gmail.com', 587)
